@@ -19,6 +19,7 @@ if __name__ == '__main__':
     os.system('cd kkma && jar -cvf kkma-original.jar/ .')
 
     shutil.move('./kkma/kkma-original.jar', './konlpy/java/kkma-2.0.jar')
+
     try:
         os.remove('./kkma/kkma-original.jar')
     except:
