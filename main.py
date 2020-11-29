@@ -1,11 +1,9 @@
 from konlpy.tag import Hannanum, Kkma
 from get_news import getRandomNews
 import re
-import hgtk
 from detect import is_human, is_org, is_pos
 import build_hannanum
-
-build_hannanum.build()
+from gensim.models.word2vec import Word2Vec
 
 
 def onlyHangul(str):
@@ -17,15 +15,6 @@ def onlyHangul(str):
 def log(obj):
     return
     print(obj)
-
-
-hannanum = Hannanum()
-kkma = Kkma()
-
-print('Load Model Done!')
-
-str = getRandomNews()
-print('Load News Done!')
 
 
 def han(sentence, humanList, lastSubject):
@@ -134,15 +123,34 @@ def han(sentence, humanList, lastSubject):
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
 
-humanList = []
-anSel = [None]
+if __name__ == '__main__':
+    build_hannanum.build()
+    hannanum = Hannanum()
+    kkma = Kkma()
 
-for sentence in str.split('.'):
-    sentence = sentence.strip()
+    print('Load Parser Done!')
 
-    if not sentence:
-        continue
+    str = getRandomNews()
+    print('Load News Done!')
 
-    anSel = han(sentence, humanList, anSel[0])
+    humanList = []
+    anSel = [None]
+    w2v = Word2Vec.load('w2v/model.model')
+    print('Load Word2Vector Done!')
 
-    print(anSel)
+    for sentence in str.split('.'):
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0])
+
+        
+
+
+        vector = (w2v.wv.get_vector(anSel[0]), w2v.wv.get_vector(anSel[1]), [w2v.wv.get_vector(i) for i in anSel[2]],
+                  [w2v.wv.get_vector(i) for i in anSel[3]])
+
+        print(anSel)
+        print(vector)
