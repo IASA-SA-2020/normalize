@@ -1,2 +1,7 @@
 host
 w2v/*
+.idea/
+__pycache__/
+konlpy/__pycache__/
+konlpy/stream/__pycache__/
+konlpy/tag/__pycache__/

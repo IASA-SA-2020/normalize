@@ -146,8 +146,7 @@ if __name__ == '__main__':
 
         (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0])
 
-        
-
+        wv_sbj = w2v.wv.get_vector(anSel[0])
 
         vector = (w2v.wv.get_vector(anSel[0]), w2v.wv.get_vector(anSel[1]), [w2v.wv.get_vector(i) for i in anSel[2]],
                   [w2v.wv.get_vector(i) for i in anSel[3]])
