@@ -1,11 +1,11 @@
 from konlpy.tag import Hannanum, Kkma
 from get_news import getRandomNews
 import re
-import hgtk
 from detect import is_human, is_org, is_pos
 import build_hannanum
+import os
+from gensim.models.word2vec import Word2Vec
 
-build_hannanum.build()
 
 
 def onlyHangul(str):
@@ -18,14 +18,6 @@ def log(obj):
     return
     print(obj)
 
-
-hannanum = Hannanum()
-kkma = Kkma()
-
-print('Load Model Done!')
-
-str = getRandomNews()
-print('Load News Done!')
 
 
 def han(sentence, humanList, lastSubject):
@@ -134,15 +126,29 @@ def han(sentence, humanList, lastSubject):
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
 
-humanList = []
-anSel = [None]
+if __name__ == "__main__":
+    build_hannanum.build()
+    hannanum = Hannanum()
+    kkma = Kkma()
+    print('Load Parser Done!')
 
-for sentence in str.split('.'):
-    sentence = sentence.strip()
+    str = getRandomNews()
+    print('Load News Done!')
 
-    if not sentence:
-        continue
+    filedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'word2vec')
+    os.chdir(filedir)
+    model = Word2Vec.load('mini_namu.model')
+    print('Load word2vec Done!')
 
-    anSel = han(sentence, humanList, anSel[0])
+    humanList = []
+    anSel = [None]
 
-    print(anSel)
+    for sentence in str.split('.'):
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        anSel = han(sentence, humanList, anSel[0])
+
+        print(anSel)
