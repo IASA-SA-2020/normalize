@@ -1,0 +1,5 @@
+gensim
+konlpy
+pymongo
+numpy==1.19.3
+tensorflow-gpu

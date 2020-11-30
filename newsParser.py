@@ -1,15 +1,6 @@
-from konlpy.tag import Hannanum, Kkma
-from get_news import getRandomNews
 import re
 from detect import is_human, is_org, is_pos
-import build_hannanum
-import os
-from gensim.models.word2vec import Word2Vec
 from wordControl import getWordInfo
-from db import connectDB
-
-host = 'mongodb://user:iasa2020!@localhost'
-
 
 
 def onlyHangul(str):
@@ -23,8 +14,7 @@ def log(obj):
     print(obj)
 
 
-
-def han(sentence, humanList, lastSubject):
+def han(sentence, humanList, lastSubject, hannanum):
     orgP = hannanum.pos(sentence)
     # print(orgP)
 
@@ -130,7 +120,8 @@ def han(sentence, humanList, lastSubject):
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
 
-def parseNews(raw, simple=True):
+def parseNews(raw, model, simple=True):
+    (hannanum, w2v) = model
     humanList = []
     anSel = [None]
     res = []
@@ -140,10 +131,10 @@ def parseNews(raw, simple=True):
         if not sentence:
             continue
 
-        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0])
+        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0], hannanum)
         try:
             wv_sbj = w2v.wv.get_vector(subject)
-            wv_mverb = w2v.wv.get_vector(mainVerb)
+            wv_mverb = w2v.wv.get_vector(hannanum.pos(mainVerb)[0][0])
         except:
             continue
 
@@ -161,7 +152,7 @@ def parseNews(raw, simple=True):
         if simple:
             for i in range(len(verbList)):
                 try:
-                    wv_verb_l.append(w2v.wv.get_vector(verbList[i]))
+                    wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[i])[0][0]))
                 except:
                     pass
             wv.append((True, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
@@ -174,12 +165,15 @@ def parseNews(raw, simple=True):
                         if i == j:
                             try:
                                 _, atn = getWordInfo(verbList[j])
-                                wv_verb_l.append(w2v.wv.get_vector(atn[0]))
+                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(atn[0])[0][0]))
                             except:
                                 fl = False
                                 break
                         else:
-                            wv_verb_l.append(w2v.wv.get_vector(verbList[j]))
+                            try:
+                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[j])[0][0]))
+                            except:
+                                pass
                     if not fl:
                         continue
                     wv.append((False, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
@@ -187,20 +181,3 @@ def parseNews(raw, simple=True):
                     pass
         res += wv
     return res
-
-
-if __name__ == '__main__':
-    build_hannanum.build()
-    hannanum = Hannanum()
-    kkma = Kkma()
-
-    print('Load Parser Done!')
-
-    filedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'w2v')
-    os.chdir(filedir)
-    w2v = Word2Vec.load('model.model')
-    print('Load Word2Vector Done!')
-
-    str = getRandomNews()
-    print('Load News Done!')
-    print(len(parseNews(str)))
