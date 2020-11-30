@@ -4,6 +4,10 @@ import re
 from detect import is_human, is_org, is_pos
 import build_hannanum
 from gensim.models.word2vec import Word2Vec
+from wordControl import getWordInfo
+from db import connectDB
+
+host = 'mongodb://user:iasa2020!@localhost'
 
 
 def onlyHangul(str):
@@ -60,7 +64,7 @@ def han(sentence, humanList, lastSubject):
         for j in sel:
             an_sel.append(j)
 
-    print(an_sel)
+    log(an_sel)
 
     subject = None
     subject_hubo = []
@@ -123,6 +127,65 @@ def han(sentence, humanList, lastSubject):
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
 
+def parseNews(raw, simple=True):
+    humanList = []
+    anSel = [None]
+    res = []
+    for sentence in raw.split('.'):
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0])
+        try:
+            wv_sbj = w2v.wv.get_vector(subject)
+            wv_mverb = w2v.wv.get_vector(mainVerb)
+        except:
+            continue
+
+        wv_noun_l = []
+        wv = []
+
+        for i in nounList:
+            try:
+                wv_noun_l.append(w2v.wv.get_vector(i))
+            except:
+                pass
+
+        wv_verb_l = []
+
+        if simple:
+            for i in range(len(verbList)):
+                try:
+                    wv_verb_l.append(w2v.wv.get_vector(verbList[i]))
+                except:
+                    pass
+            wv.append((True, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
+
+            for i in range(len(verbList)):
+                wv_verb_l = []
+                fl = True
+                try:
+                    for j in range(len(verbList)):
+                        if i == j:
+                            try:
+                                _, atn = getWordInfo(verbList[j])
+                                wv_verb_l.append(w2v.wv.get_vector(atn[0]))
+                            except:
+                                fl = False
+                                break
+                        else:
+                            wv_verb_l.append(w2v.wv.get_vector(verbList[j]))
+                    if not fl:
+                        continue
+                    wv.append((False, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
+                except:
+                    pass
+        res += wv
+    return res
+
+
 if __name__ == '__main__':
     build_hannanum.build()
     hannanum = Hannanum()
@@ -130,26 +193,9 @@ if __name__ == '__main__':
 
     print('Load Parser Done!')
 
-    str = getRandomNews()
-    print('Load News Done!')
-
-    humanList = []
-    anSel = [None]
     w2v = Word2Vec.load('w2v/model.model')
     print('Load Word2Vector Done!')
 
-    for sentence in str.split('.'):
-        sentence = sentence.strip()
-
-        if not sentence:
-            continue
-
-        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0])
-
-        wv_sbj = w2v.wv.get_vector(anSel[0])
-
-        vector = (w2v.wv.get_vector(anSel[0]), w2v.wv.get_vector(anSel[1]), [w2v.wv.get_vector(i) for i in anSel[2]],
-                  [w2v.wv.get_vector(i) for i in anSel[3]])
-
-        print(anSel)
-        print(vector)
+    str = getRandomNews()
+    print('Load News Done!')
+    print(len(parseNews(str)))

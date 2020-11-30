@@ -1,7 +1,7 @@
 import requests
-import pymongo
+from db import connectDB
 
-host = 'localhost'
+host = 'mongodb://user:iasa2020!@localhost'
 
 
 def getRaw(URL):
@@ -41,19 +41,8 @@ def crawlNaver(word):
     return syn, atn
 
 
-def connectDB():
-    while True:
-        try:
-            conn = pymongo.MongoClient(host, 27017)
-            wordDB = conn["wordDB"]
-            return wordDB
-        except:
-
-            pass
-
-
-def getWord(word):
-    wordDB = connectDB()
+def getWordInfo(word):
+    _, _, _, wordDB = connectDB(host)
     if wordDB['word'].find_one({"word": word}):
         data = wordDB['word'].find_one({"word": word})
         return data['syn'], data['atn']
@@ -74,4 +63,3 @@ def getWord(word):
     })
     return syn, atn
 
-getWord('자다')

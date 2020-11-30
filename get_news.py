@@ -20,4 +20,4 @@ newsDB = [
 
 
 def getRandomNews():
-    return newsDB[random.randint(0, len(newsDB)-1)]
+    return newsDB[random.randint(0, len(newsDB) - 2)]
