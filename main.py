@@ -3,11 +3,13 @@ from get_news import getRandomNews
 import re
 from detect import is_human, is_org, is_pos
 import build_hannanum
+import os
 from gensim.models.word2vec import Word2Vec
 from wordControl import getWordInfo
 from db import connectDB
 
 host = 'mongodb://user:iasa2020!@localhost'
+
 
 
 def onlyHangul(str):
@@ -19,6 +21,7 @@ def onlyHangul(str):
 def log(obj):
     return
     print(obj)
+
 
 
 def han(sentence, humanList, lastSubject):
@@ -193,7 +196,9 @@ if __name__ == '__main__':
 
     print('Load Parser Done!')
 
-    w2v = Word2Vec.load('w2v/model.model')
+    filedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'w2v')
+    os.chdir(filedir)
+    w2v = Word2Vec.load('model.model')
     print('Load Word2Vector Done!')
 
     str = getRandomNews()
