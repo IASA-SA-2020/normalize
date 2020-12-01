@@ -42,7 +42,7 @@ def crawlNaver(word):
 
 
 def getWordInfo(word):
-    _, _, _, wordDB = connectDB(host)
+    _, _, _, wordDB, *_ = connectDB(host)
     if wordDB['word'].find_one({"word": word}):
         data = wordDB['word'].find_one({"word": word})
         return data['syn'], data['atn']
@@ -62,4 +62,3 @@ def getWordInfo(word):
         'atn': atn
     })
     return syn, atn
-

@@ -74,36 +74,54 @@ def han(sentence, humanList, lastSubject, hannanum):
             subject_hubo.append(an_sel[i][0])
             if is_human(an_sel[i][0]):
                 humanList.append(an_sel[i][0])
+
+    for i in range(len(an_sel)):
+        if not subject:
+            if an_sel[i][1] == 'jcs':
+                if i > 0:
+                    subject = an_sel[i - 1][0]
+
+    for i in range(len(an_sel)):
+        if not subject:
+            if an_sel[i][1] == 'jcc':
+                if i > 0:
+                    subject = an_sel[i - 1][0]
+
     if not fl:
         subject_hubo = []
 
-    for i in subject_hubo:
-        if is_org(i):
-            subject = i
-
-    for i in subject_hubo:
-        if is_pos(i):
-            try:
-                for k in range(sentence.index(i) - 1, sentence.index(i) - 3, -1):
-                    first = sentence[k]
-                    for j in humanList:
-                        if j[0] == first:
-                            subject = j
-                    try:
-                        if not subject:
-                            subject = i
-                    except:
-                        subject = i
-            except:
-                pass
-
-    for i in subject_hubo:
-        if is_human(i):
-            subject = i
-
     if not subject:
-        if '이어' in sentence or '또한' in sentence or '그리고' in sentence:
-            subject = lastSubject
+        for i in subject_hubo:
+            if is_org(i):
+                subject = i
+
+        for i in subject_hubo:
+            if is_pos(i):
+                try:
+                    for k in range(sentence.index(i) - 1, sentence.index(i) - 3, -1):
+                        first = sentence[k]
+                        for j in humanList:
+                            if j[0] == first:
+                                subject = j
+                        try:
+                            if not subject:
+                                subject = i
+                        except:
+                            subject = i
+                except:
+                    pass
+
+        for i in subject_hubo:
+            if is_human(i):
+                subject = i
+
+        if not subject:
+            if '이어' in sentence or '또한' in sentence or '그리고' in sentence:
+                subject = lastSubject
+            else:
+                for i in subject_hubo:
+                    if is_org(i):
+                        subject = i
 
     verb_list = []
     for i in an_sel:
@@ -115,7 +133,10 @@ def han(sentence, humanList, lastSubject, hannanum):
     main_verb = None
 
     if not main_verb:
-        main_verb = verb_list[-1]
+        try:
+            main_verb = verb_list[-1]
+        except:
+            main_verb = None
 
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
@@ -133,8 +154,8 @@ def parseNews(raw, model, simple=True):
 
         (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0], hannanum)
         try:
-            wv_sbj = w2v.wv.get_vector(subject)
-            wv_mverb = w2v.wv.get_vector(hannanum.pos(mainVerb)[0][0])
+            wv_sbj = w2v.wv.get_vector(subject).tolist()
+            wv_mverb = w2v.wv.get_vector(hannanum.pos(mainVerb)[0][0]).tolist()
         except:
             continue
 
@@ -143,7 +164,7 @@ def parseNews(raw, model, simple=True):
 
         for i in nounList:
             try:
-                wv_noun_l.append(w2v.wv.get_vector(i))
+                wv_noun_l.append(w2v.wv.get_vector(i).tolist())
             except:
                 pass
 
@@ -152,10 +173,11 @@ def parseNews(raw, model, simple=True):
         if simple:
             for i in range(len(verbList)):
                 try:
-                    wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[i])[0][0]))
+                    wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[i])[0][0]).tolist())
                 except:
                     pass
-            wv.append((True, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
+            wv.append(
+                {'fact': True, 'subject': wv_sbj, 'mainverb': wv_mverb, 'nounlist': wv_noun_l, 'verblist': wv_verb_l})
 
             for i in range(len(verbList)):
                 wv_verb_l = []
@@ -165,18 +187,19 @@ def parseNews(raw, model, simple=True):
                         if i == j:
                             try:
                                 _, atn = getWordInfo(verbList[j])
-                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(atn[0])[0][0]))
+                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(atn[0])[0][0]).tolist())
                             except:
                                 fl = False
                                 break
                         else:
                             try:
-                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[j])[0][0]))
+                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[j])[0][0]).tolist())
                             except:
                                 pass
                     if not fl:
                         continue
-                    wv.append((False, wv_sbj, wv_mverb, wv_noun_l, wv_verb_l))
+                    wv.append({'fact': False, 'subject': wv_sbj, 'mainverb': wv_mverb, 'nounlist': wv_noun_l,
+                               'verblist': wv_verb_l})
                 except:
                     pass
         res += wv

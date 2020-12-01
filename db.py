@@ -11,18 +11,20 @@ def connectDB(host):
             categoryDB = conn["newsCategory"]
             newsRawDB = conn["newsRawDB"]
             wordDB = conn["wordDB"]
-            return newsDB, categoryDB, newsRawDB, wordDB
+            vecDB = conn["vecDB"]
+            return newsDB, categoryDB, newsRawDB, wordDB, vecDB
         except:
             pass
 
 
-def loadNews(chunk):
-    newsDB, categoryDB, _, __ = connectDB(host)
-    li = list(categoryDB['politics'].find().limit(chunk))
+def loadNews(chunk, begin=0):
+    newsDB, categoryDB, *_ = connectDB(host)
+    li = list(categoryDB['politics'].find().skip(begin).limit(chunk))
     newsList = []
+
     for i in li:
         oid = '%03d' % i['oid']
         aid = i['aid']
-        newsList.append(newsDB[oid].find_one({'aid': aid})['summary'])
+        newsList.append(newsDB[oid].find_one({'newsId': aid})['summary'])
 
     return newsList
