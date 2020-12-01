@@ -7,7 +7,7 @@ from db import loadNews, connectDB
 
 host = 'mongodb://user:iasa2020!@localhost'
 
-chunk = 10
+chunk = 100
 
 if __name__ == '__main__':
     build_hannanum.build()
