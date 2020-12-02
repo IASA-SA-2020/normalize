@@ -33,9 +33,11 @@ def han(sentence, humanList, lastSubject, hannanum):
 
     for i in an:
         log(i)
-        sel = i[0]
+        try:
+            sel = i[0]
+        except:
+            continue
         maxScore = 0
-        currentScore = 0
         for p in i:
             currentScore = 1
             for j in range(len(p)):
@@ -134,9 +136,9 @@ def han(sentence, humanList, lastSubject, hannanum):
 
     if not main_verb:
         try:
-            main_verb = verb_list[-1]
+            main_verb = len(verb_list) - 1
         except:
-            main_verb = None
+            main_verb = 0
 
     return subject, main_verb, hannanum.nouns(sentence), verb_list
 
@@ -155,7 +157,6 @@ def parseNews(raw, model, simple=True):
         (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0], hannanum)
         try:
             wv_sbj = w2v.wv.get_vector(subject).tolist()
-            wv_mverb = w2v.wv.get_vector(hannanum.pos(mainVerb)[0][0]).tolist()
         except:
             continue
 
@@ -171,36 +172,38 @@ def parseNews(raw, model, simple=True):
         wv_verb_l = []
 
         if simple:
+            mVerbIdx = None
             for i in range(len(verbList)):
                 try:
                     wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[i])[0][0]).tolist())
+                    if i == mainVerb:
+                        mVerbIdx = len(wv_verb_l) - 1
                 except:
+                    if i == mainVerb:
+                        break
                     pass
-            wv.append(
-                {'fact': True, 'subject': wv_sbj, 'mainverb': wv_mverb, 'nounlist': wv_noun_l, 'verblist': wv_verb_l})
+            if not mVerbIdx:
+                continue
+            try:
+                wv.append({'fact': True, 'subject': wv_sbj, 'mainverb': wv_verb_l[mVerbIdx], 'nounlist': wv_noun_l,
+                           'verblist': wv_verb_l})
+            except:
+                pass
 
-            for i in range(len(verbList)):
-                wv_verb_l = []
-                fl = True
+            try:
+                _, atn = getWordInfo(verbList[mainVerb])
+            except:
+                atn = []
+
+            for i in atn:
                 try:
-                    for j in range(len(verbList)):
-                        if i == j:
-                            try:
-                                _, atn = getWordInfo(verbList[j])
-                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(atn[0])[0][0]).tolist())
-                            except:
-                                fl = False
-                                break
-                        else:
-                            try:
-                                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[j])[0][0]).tolist())
-                            except:
-                                pass
-                    if not fl:
-                        continue
-                    wv.append({'fact': False, 'subject': wv_sbj, 'mainverb': wv_mverb, 'nounlist': wv_noun_l,
+                    wv_verb_l[mVerbIdx] = w2v.wv.get_vector(hannanum.pos(i)[0][0]).tolist()
+
+                    wv.append({'fact': False, 'subject': wv_sbj, 'mainverb': wv_verb_l[mVerbIdx], 'nounlist': wv_noun_l,
                                'verblist': wv_verb_l})
+                    break
                 except:
                     pass
+
         res += wv
     return res

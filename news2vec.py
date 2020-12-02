@@ -5,7 +5,7 @@ from gensim.models.word2vec import Word2Vec
 from newsParser import parseNews
 from db import loadNews, connectDB
 
-host = 'mongodb://user:iasa2020!@localhost'
+host = 'localhost'
 
 chunk = 100
 
@@ -32,10 +32,10 @@ if __name__ == '__main__':
 
         for i in li:
             wv += parseNews(i, (hannanum, w2v))
-            print('parse')
 
         begin += len(li)
         if wv:
             vecDB['data'].insert_many(wv)
             print('Pushed %d wv(s) to DB.' % len(wv))
+        vecDB['metadata'].delete_one({'type': 'politics'})
         vecDB['metadata'].insert_one({'type': 'politics', 'idx': begin})

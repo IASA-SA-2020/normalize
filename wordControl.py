@@ -1,7 +1,7 @@
 import requests
 from db import connectDB
 
-host = 'mongodb://user:iasa2020!@localhost'
+host = 'localhost'
 
 
 def getRaw(URL):

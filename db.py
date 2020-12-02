@@ -1,6 +1,6 @@
 import pymongo
 
-host = 'mongodb://user:iasa2020!@localhost'
+host = 'localhost'
 
 
 def connectDB(host):
@@ -23,7 +23,7 @@ def loadNews(chunk, begin=0):
     newsList = []
 
     for i in li:
-        oid = '%03d' % i['oid']
+        oid = '%d' % i['oid']
         aid = i['aid']
         newsList.append(newsDB[oid].find_one({'newsId': aid})['summary'])
 
