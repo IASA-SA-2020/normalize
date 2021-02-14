@@ -28,3 +28,9 @@ def loadNews(chunk, begin=0):
         newsList.append(newsDB[oid].find_one({'newsId': aid})['summary'])
 
     return newsList
+
+
+def loadSNU(chunk, begin=0):
+    newsDB, *_ = connectDB(host)
+    li = list(newsDB['snu'].find().skip(begin).limit(chunk))
+    return li

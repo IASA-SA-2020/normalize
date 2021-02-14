@@ -82,12 +82,16 @@ def han(sentence, humanList, lastSubject, hannanum):
             if an_sel[i][1] == 'jcs':
                 if i > 0:
                     subject = an_sel[i - 1][0]
+        else:
+            break
 
     for i in range(len(an_sel)):
         if not subject:
             if an_sel[i][1] == 'jcc':
                 if i > 0:
                     subject = an_sel[i - 1][0]
+        else:
+            break
 
     if not fl:
         subject_hubo = []
@@ -125,6 +129,13 @@ def han(sentence, humanList, lastSubject, hannanum):
                     if is_org(i):
                         subject = i
 
+    for i in range(len(an_sel)):
+        if not subject:
+            if an_sel[i][1] == 'jxc':
+                if i > 0:
+                    subject = an_sel[i - 1][0]
+        else:
+            break
     verb_list = []
     for i in an_sel:
         if i[1][0] == 'p':
@@ -205,5 +216,59 @@ def parseNews(raw, model, simple=True):
                 except:
                     pass
 
+        res += wv
+    return res
+
+
+def parseSNU(raw, model):
+    (hannanum, w2v) = model
+    humanList = []
+    anSel = [None]
+    res = []
+
+    for sentence in raw['body'].split('.'):
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        if '"' in sentence:
+            sentence = sentence.split('"')[1]
+
+        (subject, mainVerb, nounList, verbList) = han(sentence, humanList, anSel[0], hannanum)
+        try:
+            wv_sbj = w2v.wv.get_vector(subject).tolist()
+        except:
+            continue
+
+        wv_noun_l = []
+        wv = []
+
+        for i in nounList:
+            try:
+                wv_noun_l.append(w2v.wv.get_vector(i).tolist())
+            except:
+                pass
+
+        wv_verb_l = []
+
+        mVerbIdx = None
+        for i in range(len(verbList)):
+            try:
+                wv_verb_l.append(w2v.wv.get_vector(hannanum.pos(verbList[i])[0][0]).tolist())
+                if i == mainVerb:
+                    mVerbIdx = len(wv_verb_l) - 1
+            except:
+                if i == mainVerb:
+                    break
+                pass
+        if not mVerbIdx:
+            continue
+        try:
+            wv.append(
+                {'score': raw['score'], 'subject': wv_sbj, 'mainverb': wv_verb_l[mVerbIdx], 'nounlist': wv_noun_l,
+                 'verblist': wv_verb_l})
+        except:
+            pass
         res += wv
     return res
