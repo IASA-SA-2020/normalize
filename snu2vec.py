@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     filedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'w2v')
     os.chdir(filedir)
-    w2v = Word2Vec.load('model.model')
+    w2v = Word2Vec.load('mini_namu.model')
     print('Load Word2Vector Done!')
     _, _, _, _, vecDB, *_ = connectDB(host)
 

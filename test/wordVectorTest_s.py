@@ -5,7 +5,7 @@ from gensim.models.word2vec import Word2Vec
 if __name__ == "__main__":
     filedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../w2v')
     os.chdir(filedir)
-    filename4 = 'model.model'
+    filename4 = 'mini_namu.model'
 
     model = Word2Vec.load(filename4)
     print('Model Loaded!')
